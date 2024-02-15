@@ -17,10 +17,10 @@ try {
         const questionWithAnswers = current.split("~~ ANSWER ~~")[0];
         const correctAnswerStr = current.split('~~ ANSWER ~~')[1];
         const correctAnswerArr = getCorrectAnswers(correctAnswerStr);
-        const questionWithAnswersCleaned = removeAndTrimEmptyEntries(questionWithAnswers.split('\n'));
+        const questionWithAnswersCleaned = trimAndRemoveEmptyEntries(questionWithAnswers.split('\n'));
         const amountOfQuestionElements = countArrElementsUntilSeperatorA(questionWithAnswersCleaned);
         const question = getQuestionFromQuestionAnswerArr(questionWithAnswersCleaned, amountOfQuestionElements).join(' ');
-        const answersArr = extractAnswers(removeAndTrimEmptyEntries(getAnswersFromQuestionAnswerArr(questionWithAnswersCleaned, amountOfQuestionElements)).join(' '));
+        const answersArr = extractAnswers(trimAndRemoveEmptyEntries(getAnswersFromQuestionAnswerArr(questionWithAnswersCleaned, amountOfQuestionElements)).join(' '));
 
         if (answersArr.length > 5) {
             skippedQuestionsBecauseTooManyChoices.push(question);
@@ -33,16 +33,17 @@ try {
         }
     });
 
-    fs.writeFileSync('./data/anki_cards.txt', cardsString);
-  
-    console.log("Skipped this question because more than 5 possible choices are available:");
-    console.log(skippedQuestionsBecauseTooManyChoices.join('\n'));
+    if(skippedQuestionsBecauseTooManyChoices.length > 0 ) {
+        console.log(`Skipped this question because more than 5 possible choices are available: ${skippedQuestionsBecauseTooManyChoices.join('\n')}`);
+    }
 
+    fs.writeFileSync(`./data/anki_cards_${(new Date).getTime()}.txt`, cardsString);
+    
 } catch (err) {
     console.error(err);
 }
 
-function removeAndTrimEmptyEntries(arr) {
+function trimAndRemoveEmptyEntries(arr) {
     return arr
         .map(e => e.trim())
         .filter(n => n);
@@ -65,19 +66,11 @@ function countArrElementsUntilSeperatorA(arr) {
 }
 
 function getAnswersFromQuestionAnswerArr(arr, lengthOfQuestion) {
-    var retArr = [];
-    for (let i = lengthOfQuestion; i < arr.length; i++) {
-        retArr.push(arr[i]);
-    }
-    return retArr;
+    return arr.slice(lengthOfQuestion);
 }
 
 function getQuestionFromQuestionAnswerArr(arr, lengthOfQuestion) {
-    var retArr = [];
-    for (let i = 0; i < lengthOfQuestion; i++) {
-        retArr.push(arr[i]);
-    }
-    return retArr;
+    return arr.slice(0, lengthOfQuestion);
 }
 
 function buildQuestionAnswerString(question, title, answerPossibilitiesArr, correctAnswersArr) {
